@@ -1,5 +1,12 @@
 # Tofi
 
+> This is a maintained fork of [philj56/tofi](https://github.com/philj56/tofi),
+> which has been inactive since December 2024. It is a drop-in replacement:
+> same binaries, same config. The goal is unchanged: a tiny, fast menu, with
+> bug fixes and Wayland correctness ahead of new features.
+> Maintained by [identityapproved](https://github.com/identityapproved).
+> Original author: Philip Jones.
+
 An extremely fast and simple [dmenu](https://tools.suckless.org/dmenu/) /
 [rofi](https://github.com/davatorium/rofi) replacement for
 [wlroots](https://gitlab.freedesktop.org/wlroots/wlroots)-based
