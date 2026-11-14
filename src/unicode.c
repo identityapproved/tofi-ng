@@ -69,7 +69,7 @@ size_t utf32_strlen(const uint32_t *s)
 
 char *utf8_next_char(const char *s)
 {
-	return g_utf8_next_char(s);
+	return (char *)g_utf8_next_char(s);
 }
 
 char *utf8_prev_char(const char *s)
