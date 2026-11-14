@@ -111,7 +111,10 @@ options.
 
 *physical-keybindings*=_true|false_
 	If true, use physical keys for shortcuts, regardless of the current
-	keyboard layout. If false, use the current layout's keys.
+	keyboard layout. If false, use the current layout's keys. Keys that
+	don't type a character, such as Escape, Return or the arrow keys,
+	always follow the current layout, so remappings such as
+	caps:swapescape are respected.
 
 	Default: true
 

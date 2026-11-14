@@ -47,10 +47,15 @@ void input_handle_keypress(struct tofi *tofi, xkb_keycode_t keycode)
 	/*
 	 * Use physical key code for shortcuts by default, ignoring layout
 	 * changes. Linux keycodes are 8 less than XKB keycodes.
+	 *
+	 * Keys that don't produce a printable character (Escape, Return,
+	 * the arrow keys etc.) always use the keysym instead, so that
+	 * remappings such as caps:swapescape are respected.
 	 */
+	xkb_keysym_t sym = xkb_state_key_get_one_sym(tofi->xkb_state, keycode);
 	uint32_t key = keycode - 8;
-	if (!tofi->physical_keybindings) {
-		xkb_keysym_t sym = xkb_state_key_get_one_sym(tofi->xkb_state, keycode);
+	if (!tofi->physical_keybindings
+			|| !utf32_isprint(xkb_keysym_to_utf32(sym))) {
 		key = keysym_to_key(sym);
 	}
 
