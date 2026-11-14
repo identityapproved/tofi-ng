@@ -1257,6 +1257,26 @@ int main(int argc, char *argv[])
 	log_debug("First roundtrip done.\n");
 
 	/*
+	 * Bail out early if the compositor is missing a global we can't
+	 * work without, rather than crashing later. GNOME, for example,
+	 * doesn't support wlr-layer-shell.
+	 */
+	const struct { const void *global; const char *name; } required[] = {
+		{ tofi.wl_compositor, "wl_compositor" },
+		{ tofi.wl_shm, "wl_shm" },
+		{ tofi.wl_seat, "wl_seat" },
+		{ tofi.wl_data_device_manager, "wl_data_device_manager" },
+		{ tofi.zwlr_layer_shell, "zwlr_layer_shell_v1" },
+	};
+	for (size_t i = 0; i < N_ELEM(required); i++) {
+		if (required[i].global == NULL) {
+			log_error("Compositor does not support %s.\n",
+					required[i].name);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	/*
 	 * The next roundtrip causes the listeners we set up in
 	 * registry_global() to be called. Notably, the output should be
 	 * configured, telling us the scale factor and size.
