@@ -1,6 +1,5 @@
 #include <ctype.h>
 #include <errno.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -310,8 +309,17 @@ bool parse_option(struct tofi *tofi, const char *filename, size_t lineno, const 
 		if (value[0] == '/') {
 			config_load(tofi, value);
 		} else {
+			/*
+			 * Avoid dirname(), as libgen.h conflicts with musl's
+			 * string.h when compiling as C23.
+			 */
 			char *tmp = xstrdup(filename);
-			char *dir = dirname(tmp);
+			char *slash = strrchr(tmp, '/');
+			const char *dir = ".";
+			if (slash != NULL) {
+				*slash = '\0';
+				dir = tmp[0] != '\0' ? tmp : "/";
+			}
 			size_t len = strlen(dir) + 1 + strlen(value) + 1;
 			char *config = xcalloc(len, 1);
 			snprintf(config, len, "%s/%s", dir, value);
