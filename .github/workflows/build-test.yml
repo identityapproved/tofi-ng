@@ -4,97 +4,59 @@ on:
   push:
     paths-ignore:
       - 'README.md'
-      - 'doc'
-      - 'themes'
+      - 'themes/**'
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'themes/**'
 
 jobs:
-  ubuntu-20_04:
+  ubuntu:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+        lto: [true, false]
+
+    name: ubuntu-24.04 (${{ matrix.cc }}, lto=${{ matrix.lto }})
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install build-essential llvm clang meson scdoc \
           ninja-build libfreetype-dev libharfbuzz-dev libcairo-dev \
-          libpango1.0-dev libwayland-dev wayland-protocols libxkbcommon-dev \
-          python3-pip
+          libpango1.0-dev libwayland-dev wayland-protocols libxkbcommon-dev
 
-          sudo pip3 install --upgrade meson
-
-      # The version of GCC on Ubuntu 20.04 is too old to recognise
-      # [[attribute]] syntax, so skip the build there.
-      #
-      # Additionally, clang will raise unknown attribute errors, so don't
-      # enable werror.
-
-      - name: Set clang as default compiler
-        run: sudo update-alternatives --set cc $(which clang)
-
-      - name: Clang LTO build
+      - name: Build and test
+        env:
+          CC: ${{ matrix.cc }}
         run: |
-          meson build
-          ninja -C build test
-          rm -rf build
+          meson setup build -Dwerror=true -Db_lto=${{ matrix.lto }}
+          meson test -C build
 
-      - name: Clang non-LTO build
-        run: |
-          meson build
-          meson configure build -Db_lto=false
-          ninja -C build test
-          rm -rf build
+  alpine:
 
-  ubuntu-22_04:
-
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    container: alpine:latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install build-essential llvm clang meson scdoc \
-          ninja-build libfreetype-dev libharfbuzz-dev libcairo-dev \
-          libpango1.0-dev libwayland-dev wayland-protocols libxkbcommon-dev \
-          python3-pip
+          apk add build-base git meson scdoc freetype-dev harfbuzz-dev \
+          cairo-dev pango-dev glib-dev wayland-dev wayland-protocols \
+          libxkbcommon-dev musl-fts-dev
 
-          sudo pip3 install --upgrade meson
+      - name: Checkout repo
+        uses: actions/checkout@v5
 
-      - name: GCC LTO build
+      - name: Build and test
         run: |
-          meson build
-          meson configure build -Dwerror=true
-          ninja -C build test
-          rm -rf build
-
-      - name: GCC non-LTO build
-        run: |
-          meson build
-          meson configure build -Dwerror=true
-          meson configure build -Db_lto=false
-          ninja -C build test
-          rm -rf build
-
-      - name: Set clang as default compiler
-        run: sudo update-alternatives --set cc $(which clang)
-
-      - name: Clang LTO build
-        run: |
-          meson build
-          meson configure build -Dwerror=true
-          ninja -C build test
-          rm -rf build
-
-      - name: Clang non-LTO build
-        run: |
-          meson build
-          meson configure build -Dwerror=true
-          meson configure build -Db_lto=false
-          ninja -C build test
-          rm -rf build
+          meson setup build -Dwerror=true
+          meson test -C build
