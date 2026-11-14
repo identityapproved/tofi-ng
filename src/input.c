@@ -139,6 +139,8 @@ static uint32_t keysym_to_key(xkb_keysym_t sym)
 			return KEY_K;
 		case XKB_KEY_p:
 			return KEY_P;
+		case XKB_KEY_b:
+			return KEY_B;
 		case XKB_KEY_Down:
 			return KEY_DOWN;
 		case XKB_KEY_Tab:
@@ -149,6 +151,8 @@ static uint32_t keysym_to_key(xkb_keysym_t sym)
 			return KEY_J;
 		case XKB_KEY_n:
 			return KEY_N;
+		case XKB_KEY_f:
+			return KEY_F;
 		case XKB_KEY_Home:
 			return KEY_HOME;
 		case XKB_KEY_Page_Up:
@@ -161,6 +165,8 @@ static uint32_t keysym_to_key(xkb_keysym_t sym)
 			return KEY_C;
 		case XKB_KEY_bracketleft:
 			return KEY_LEFTBRACE;
+		case XKB_KEY_g:
+			return KEY_G;
 		case XKB_KEY_Return:
 			return KEY_ENTER;
 		case XKB_KEY_KP_Enter:
