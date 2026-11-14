@@ -1514,6 +1514,15 @@ int main(int argc, char *argv[])
 		log_unindent();
 		log_debug("App list generated.\n");
 	} else {
+		/*
+		 * If stdin is a terminal, we'd block waiting for input that
+		 * the user probably doesn't know we want, so bail out instead.
+		 */
+		if (isatty(STDIN_FILENO)) {
+			log_error("No input on stdin, "
+					"try piping a list of options to tofi.\n");
+			exit(EXIT_FAILURE);
+		}
 		log_debug("Reading stdin.\n");
 		char *buf = read_stdin(!tofi.ascii_input);
 		tofi.window.entry.command_buffer = buf;
