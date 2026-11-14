@@ -170,12 +170,14 @@ void string_vec_uniq(struct string_vec *restrict vec)
 
 struct scored_string *string_vec_find_sorted(struct string_vec *restrict vec, const char * str)
 {
-	return bsearch(&str, vec->buf, vec->count, sizeof(vec->buf[0]), cmpstringp);
+	struct scored_string tmp = { .string = (char *)str };
+	return bsearch(&tmp, vec->buf, vec->count, sizeof(vec->buf[0]), cmpstringp);
 }
 
 struct scored_string_ref *string_ref_vec_find_sorted(struct string_ref_vec *restrict vec, const char * str)
 {
-	return bsearch(&str, vec->buf, vec->count, sizeof(vec->buf[0]), cmpstringp);
+	struct scored_string_ref tmp = { .string = (char *)str };
+	return bsearch(&tmp, vec->buf, vec->count, sizeof(vec->buf[0]), cmpstringp);
 }
 
 struct string_ref_vec string_ref_vec_filter(
