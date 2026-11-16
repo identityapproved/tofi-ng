@@ -1004,21 +1004,22 @@ static void parse_args(struct tofi *tofi, int argc, char *argv[])
 	}
 }
 
-/* Print input lines as given, not as normalised for matching. */
-static const char *find_raw_line(char *raw, const char *res)
+/* Normalising keeps line breaks, so line N of each buffer is the same line. */
+static const char *find_raw_line(const char *buf, char *raw, const char *res)
 {
-	char *saveptr = NULL;
-	char *line = strtok_r(raw, "\n", &saveptr);
-	while (line != NULL) {
-		char *tmp = utf8_normalize(line);
-		bool match = strcmp(tmp, res) == 0;
-		free(tmp);
-		if (match) {
-			return line;
+	size_t line = 0;
+	for (const char *p = buf; p < res; p++) {
+		if (*p != '\n' && *p != '\0'
+				&& (p == buf || p[-1] == '\n' || p[-1] == '\0')) {
+			line++;
 		}
-		line = strtok_r(NULL, "\n", &saveptr);
 	}
-	return res;
+	char *saveptr = NULL;
+	char *tok = strtok_r(raw, "\n", &saveptr);
+	for (size_t i = 0; tok != NULL && i < line; i++) {
+		tok = strtok_r(NULL, "\n", &saveptr);
+	}
+	return tok != NULL ? tok : res;
 }
 
 static bool do_submit(struct tofi *tofi)
@@ -1069,7 +1070,10 @@ static bool do_submit(struct tofi *tofi)
 				}
 			}
 		} else if (entry->raw_buffer != NULL) {
-			printf("%s\n", find_raw_line(entry->raw_buffer, res));
+			printf("%s\n", find_raw_line(
+					entry->command_buffer,
+					entry->raw_buffer,
+					res));
 		} else {
 			printf("%s\n", res);
 		}
