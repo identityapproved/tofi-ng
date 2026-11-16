@@ -1287,6 +1287,7 @@ int main(int argc, char *argv[])
 	log_unindent();
 	log_debug("Second roundtrip done.\n");
 
+	bool explicit_output = tofi.target_output_name[0] != '\0';
 	{
 		/*
 		 * Determine the output we're going to appear on, and get its
@@ -1415,6 +1416,8 @@ int main(int argc, char *argv[])
 					tofi.default_output->name);
 			/* We don't need this anymore. */
 			tofi.default_output = NULL;
+		} else {
+			log_debug("Couldn't determine default output.\n");
 		}
 		wl_list_for_each_reverse_safe(el, tmp, &tofi.output_list, link) {
 			if (!strcmp(tofi.target_output_name, el->name)) {
@@ -1594,9 +1597,9 @@ int main(int argc, char *argv[])
 				tofi.window.scale);
 	}
 
-	/* Grab the first (and only remaining) output from our list. */
-	struct wl_output *wl_output;
-	{
+	/* Let the compositor choose unless an output was requested. */
+	struct wl_output *wl_output = NULL;
+	if (explicit_output) {
 		struct output_list_element *el;
 		el = wl_container_of(tofi.output_list.next, el, link);
 		wl_output = el->wl_output;
