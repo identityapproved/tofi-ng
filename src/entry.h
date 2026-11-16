@@ -84,6 +84,7 @@ struct entry {
 	uint32_t selection;
 	uint32_t first_result;
 	char *command_buffer;
+	char *raw_buffer;
 	struct string_ref_vec results;
 	struct string_ref_vec commands;
 	struct desktop_vec apps;

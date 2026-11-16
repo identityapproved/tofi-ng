@@ -49,7 +49,7 @@ static uint32_t gettime_ms() {
 
 
 /* Read all of stdin into a buffer. */
-static char *read_stdin(bool normalize) {
+static char *read_stdin(bool normalize, char **raw) {
 	const size_t block_size = BUFSIZ;
 	size_t num_blocks = 1;
 	size_t buf_size = block_size;
@@ -76,8 +76,12 @@ static char *read_stdin(bool normalize) {
 	if (normalize) {
 		if (utf8_validate(buf)) {
 			char *tmp = utf8_normalize(buf);
-			free(buf);
-			buf = tmp;
+			if (strcmp(tmp, buf) == 0) {
+				free(tmp);
+			} else {
+				*raw = buf;
+				buf = tmp;
+			}
 		} else {
 			log_error("Invalid UTF-8 in stdin.\n");
 		}
@@ -1000,6 +1004,23 @@ static void parse_args(struct tofi *tofi, int argc, char *argv[])
 	}
 }
 
+/* Print input lines as given, not as normalised for matching. */
+static const char *find_raw_line(char *raw, const char *res)
+{
+	char *saveptr = NULL;
+	char *line = strtok_r(raw, "\n", &saveptr);
+	while (line != NULL) {
+		char *tmp = utf8_normalize(line);
+		bool match = strcmp(tmp, res) == 0;
+		free(tmp);
+		if (match) {
+			return line;
+		}
+		line = strtok_r(NULL, "\n", &saveptr);
+	}
+	return res;
+}
+
 static bool do_submit(struct tofi *tofi)
 {
 	struct entry *entry = &tofi->window.entry;
@@ -1047,6 +1068,8 @@ static bool do_submit(struct tofi *tofi)
 					break;
 				}
 			}
+		} else if (entry->raw_buffer != NULL) {
+			printf("%s\n", find_raw_line(entry->raw_buffer, res));
 		} else {
 			printf("%s\n", res);
 		}
@@ -1527,7 +1550,9 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 		log_debug("Reading stdin.\n");
-		char *buf = read_stdin(!tofi.ascii_input);
+		char *buf = read_stdin(
+				!tofi.ascii_input,
+				&tofi.window.entry.raw_buffer);
 		tofi.window.entry.command_buffer = buf;
 		tofi.window.entry.commands = string_ref_vec_from_buffer(buf);
 		if (tofi.use_history) {
@@ -1940,6 +1965,7 @@ int main(int argc, char *argv[])
 	if (tofi.window.entry.command_buffer != NULL) {
 		free(tofi.window.entry.command_buffer);
 	}
+	free(tofi.window.entry.raw_buffer);
 	string_ref_vec_destroy(&tofi.window.entry.commands);
 	string_ref_vec_destroy(&tofi.window.entry.results);
 	if (tofi.use_history) {
